@@ -12,17 +12,17 @@ type DataChannel chan DataEvent
 type DataChannelSlice []DataChannel
 
 type EventBus struct {
-	subscribers map[string]DataChannelSlice
+	Subscribers map[string]DataChannelSlice
 	rm          sync.RWMutex
 }
 
 func (eb *EventBus) Subscribe(topic string, ch DataChannel) {
 	eb.rm.Lock()
 
-	if prev, found := eb.subscribers[topic]; found {
-		eb.subscribers[topic] = append(prev, ch)
+	if prev, found := eb.Subscribers[topic]; found {
+		eb.Subscribers[topic] = append(prev, ch)
 	} else {
-		eb.subscribers[topic] = append([]DataChannel{}, ch)
+		eb.Subscribers[topic] = append([]DataChannel{}, ch)
 	}
 
 	eb.rm.Unlock()
@@ -31,7 +31,7 @@ func (eb *EventBus) Subscribe(topic string, ch DataChannel) {
 func (eb *EventBus) Publish(topic string, data interface{}) {
 	eb.rm.RLock()
 
-	if chans, found := eb.subscribers[topic]; found {
+	if chans, found := eb.Subscribers[topic]; found {
 		channels := append(DataChannelSlice{}, chans...)
 		go func(data DataEvent, dataChannelSlices DataChannelSlice) {
 			for _, ch := range dataChannelSlices {
